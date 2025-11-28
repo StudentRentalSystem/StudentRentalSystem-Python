@@ -7,7 +7,7 @@ def hash_content(content):
 
 def extract_json_from_string(text):
     try:
-        # 尋找第一個 { 和最後一個 }
+        # Find the first { and the last }
         start = text.find('{')
         end = text.rfind('}')
         if start != -1 and end != -1:

@@ -10,7 +10,7 @@ def worker(post_queue):
     while True:
         post = post_queue.get()
         if post is Crawler.POISON_PILL:
-            # 放回 Poison Pill 讓其他 worker 也能停止 (如果有多個 worker)
+            # Put back Poison Pill to let other workers stop (if multiple workers)
             post_queue.put(Crawler.POISON_PILL)
             break
             
@@ -31,12 +31,12 @@ def main():
     scroll_count = int(sys.argv[1])
     post_queue = queue.Queue()
 
-    # 啟動 Crawler
+    # Start Crawler
     crawler = Crawler(scroll_count, post_queue)
     crawler_thread = threading.Thread(target=crawler.crawl)
     crawler_thread.start()
 
-    # 啟動 Worker 執行緒 (這裡設定數量為 scroll_count / 2，最小為 1)
+    # Start Worker threads (Here set count to scroll_count / 2, min 1)
     worker_count = max(1, scroll_count // 2)
     workers = []
     for _ in range(worker_count):
@@ -44,10 +44,10 @@ def main():
         t.start()
         workers.append(t)
 
-    # 等待 Crawler 結束
+    # Wait for Crawler to finish
     crawler_thread.join()
     
-    # 等待所有佇列處理完畢
+    # Wait for all queues to be processed
     for t in workers:
         t.join()
 

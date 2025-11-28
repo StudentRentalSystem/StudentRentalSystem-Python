@@ -1,4 +1,3 @@
-# config.py
 import os
 import platform
 from dotenv import load_dotenv
@@ -12,7 +11,6 @@ class Config:
     DB_NAME = "app"
     DB_COLLECTION = "house_rental"
     
-    # LLM 設定
     LLM_SERVER_ADDRESS = os.getenv("LLM_SERVER_ADDRESS", "http://localhost")
     LLM_SERVER_PORT = os.getenv("LLM_SERVER_PORT", "")
     LLM_MODEL_TYPE = os.getenv("LLM_MODEL_TYPE", "llama3:8b")

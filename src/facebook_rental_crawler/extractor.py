@@ -5,7 +5,7 @@ import re
 from config import Config
 from utils import extract_json_from_string, hash_content
 
-# 將 extract_prompt.txt 完整內容填入
+# Fill in the complete content of extract_prompt.txt
 PROMPT_TEMPLATE = """請根據以下租屋貼文，轉換為指定的 JSON 格式。所有欄位皆為字串、列表或數值，請務必完整填入。
 
 【輸出 JSON 欄位格式（必填）】
@@ -94,13 +94,13 @@ others：如「私訊我」、「留言聯絡」等非明確管道。
 
 class RentalExtractor:
     def __init__(self):
-        # 處理 URL 結尾斜線問題，確保路徑正確
+        # Handle URL trailing slash issue to ensure correct path
         base_url = Config.LLM_SERVER_ADDRESS.rstrip('/')
         if not base_url.startswith('http'):
-             # 假設 Config 只有 IP 或 Domain
+             # Assume Config has only IP or Domain
              self.api_url = f"http://{base_url}:{Config.LLM_SERVER_PORT}/api/chat"
         else:
-             # 假設 Config 已經是完整 URL
+             # Assume Config is already a complete URL
              self.api_url = f"{base_url}/api/chat"
              
         self.model = Config.LLM_MODEL_TYPE
@@ -108,12 +108,12 @@ class RentalExtractor:
     def call_ollama(self, text):
         prompt = PROMPT_TEMPLATE.replace("{text}", text)
         
-        # 設定 Headers (包含 Authorization)
+        # Set Headers (including Authorization)
         headers = {
             "Content-Type": "application/json"
         }
         
-        # 檢查 Config 是否有 TOKEN，如果有才加入
+        # Check if Config has TOKEN, add if present
         if hasattr(Config, 'LLM_CLIENT_TOKEN') and Config.LLM_CLIENT_TOKEN:
              headers["Authorization"] = f"Bearer {Config.LLM_CLIENT_TOKEN}"
         elif hasattr(Config, 'LLM_API_KEY') and Config.LLM_API_KEY:
@@ -126,13 +126,13 @@ class RentalExtractor:
         }
         
         try:
-            # 修正重點：headers 必須作為參數傳遞，不能放在 payload 裡面
+            # Correction: headers must be passed as an argument, not inside payload
             response = requests.post(self.api_url, json=payload, headers=headers)
             response.raise_for_status()
             return response.json().get("message", {}).get("content", "")
         except Exception as e:
             print(f"❌ LLM Call Error: {e}")
-            # 如果是 401/403，特別印出提示
+            # If 401/403, print special hint
             if isinstance(e, requests.exceptions.HTTPError):
                 if e.response.status_code in [401, 403]:
                     print("⚠️ 權限錯誤：請檢查 .env 檔案中的 LLM_CLIENT_TOKEN 或 CLIENT_TOKEN 是否正確。")
@@ -147,7 +147,7 @@ class RentalExtractor:
         
         while attempts < Config.RETRY_ATTEMPTS and not success:
             llm_response = self.call_ollama(raw_post)
-            # 移除 <think> 標籤 (針對 deepseek 或其他有思考過程的模型)
+            # Remove <think> tags (for deepseek or other models with thinking process)
             clean_response = re.sub(r'(?s)<think>.*?</think>', '', llm_response).strip()
             
             json_obj = extract_json_from_string(clean_response)
@@ -168,11 +168,11 @@ class RentalExtractor:
         return processed_data
 
     def _normalize_data(self, data):
-        # 修正坪數
+        # Fix area size
         if "坪數" in data:
             data["坪數"] = [-1 if x >= 100 else x for x in data["坪數"]]
         
-        # 修正聯絡方式結構 (對應 RentalExtractor.java 的 formSameJSON)
+        # Fix contact structure (corresponds to RentalExtractor.java's formSameJSON)
         if "聯絡方式" in data:
             new_contacts = []
             for contact in data["聯絡方式"]:
@@ -183,13 +183,13 @@ class RentalExtractor:
                     "lineLink": self._clean_list(contact.get("lineLink")),
                     "others": self._clean_list(contact.get("others"))
                 }
-                # 去除手機號碼中的橫線
+                # Remove dashes from phone numbers
                 normalized["手機"] = [p.replace("-", "") for p in normalized["手機"]]
                 new_contacts.append(normalized)
             data["聯絡方式"] = new_contacts
 
     def _clean_list(self, val):
-        # 對應 checkFirstObject 邏輯
+        # Corresponds to checkFirstObject logic
         if not val: return []
         if isinstance(val, list) and len(val) == 1 and (not val[0] or val[0] == "未知"):
             return []

@@ -10,7 +10,7 @@ from config import Config
 from utils import hash_content
 from database import db_instance
 
-# 設定 Logger
+# Setup Logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class Crawler:
         self.options = Options()
         self.options.add_argument(f"user-data-dir={Config.get_chrome_user_data()}")
         self.options.add_argument("profile-directory=Default")
-        # 保持瀏覽器開啟 (非必要，但方便除錯)
+        # Keep browser open (optional, but useful for debugging)
         self.options.add_experimental_option("detach", True)
 
         self.driver = webdriver.Chrome(options=self.options)
@@ -33,11 +33,11 @@ class Crawler:
         logger.info("Facebook Crawler initialized.")
         self.scroll_count = scroll_count
         
-        # 對應 Java 的 FluentWait (Timeout 3s, Polling 100ms)
+        # Corresponds to Java's FluentWait (Timeout 3s, Polling 100ms)
         self.wait = WebDriverWait(self.driver, 3, poll_frequency=0.1)
         
         self.post_set = set()
-        # 載入資料庫中已有的 ID
+        # Load existing IDs from database
         self.post_set.update(db_instance.fetch_all_ids())
         
         self.queue = post_queue
@@ -85,14 +85,14 @@ class Crawler:
             self.driver.quit()
 
     def crawl_one_page(self):
-        # 1. 尋找所有「查看更多」按鈕
+        # 1. Find all "See more" buttons
         see_more_buttons = self.driver.find_elements(By.XPATH, "//div[text()='查看更多']")
         
-        # 如果找不到中文，嘗試找英文 "See more"
+        # If Chinese not found, try finding English "See more"
         if not see_more_buttons:
             see_more_buttons = self.driver.find_elements(By.XPATH, "//div[text()='See more']")
         
-        # 2. 展開所有按鈕
+        # 2. Expand all buttons
         for button in see_more_buttons:
             try:
                 if button.is_displayed():
@@ -105,25 +105,25 @@ class Crawler:
         
         time.sleep(1)
         
-        # 3. 抓取所有貼文元素
+        # 3. Scrape all post elements
         post_elements = self.driver.find_elements(By.XPATH, "//div[@data-ad-preview='message']")
         
         for post in post_elements:
             success = False
-            # 重試機制 (最多 3 次)
+            # Retry mechanism (max 3 times)
             for retry in range(3):
                 if success: break
                 try:
                     if post is None: continue 
                     
                     text = post.text.strip()
-                    # 確保文字不為空，且不包含未展開的 "查看更多" 或 "See more"
+                    # Ensure text is not empty and does not contain unexpanded "See more"
                     if text and "查看更多" not in text and "See more" not in text:
                         hash_val = hash_content(text)
                         
                         if hash_val in self.post_set:
                             print("跳過重複貼文")
-                            continue # 在 Java 邏輯中，這會繼續內層迴圈 (retry loop)，效果等同於跳過這次處理
+                            continue # In Java logic, this continues the inner loop (retry loop), effectively skipping this processing
                         
                         print("------------------------")
                         print(text)
@@ -169,7 +169,7 @@ class Crawler:
         if hash_val not in self.post_set:
             self.post_set.add(hash_val)
             print(f"Hashed content:{hash_val}")
-            # 建立貼文物件放入 Queue (這裡用 Dict 模擬 Post 物件)
+            # Create post object and put into Queue (Here using Dict to simulate Post object)
             p = {"id": hash_val, "content": content}
             try:
                 self.queue.put(p)

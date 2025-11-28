@@ -9,7 +9,7 @@ class Database:
         self.collection = self.db[Config.DB_COLLECTION]
 
     def fetch_all_ids(self):
-        # 只抓取 _id 欄位
+        # Fetch only _id field
         cursor = self.collection.find({}, {"_id": 1})
         return [str(doc["_id"]) for doc in cursor]
 
