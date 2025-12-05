@@ -40,7 +40,7 @@ def install_spy(mini_rag_instance):
 
             original_method = client.call_local_model
 
-            def spy_call_local_model(prompt, *args, **kwargs):
+            defx spy_call_local_model(prompt, *args, **kwargs):
                 if "JSON" in prompt or "json" in prompt:
                     print(f"\n[🔍 SPY] 攔截到 Prompt 請求:\n{prompt[:100]}...")
                 return original_method(prompt, *args, **kwargs)

@@ -3,8 +3,8 @@ import redis
 from config import Config
 
 # Initialize MongoDB connection
-mongo_client = pymongo.MongoClient(Config.MONGO_URI)
-db = mongo_client.get_database()  # Automatically gets the DB from the URI
+mongo_client = pymongo.MongoClient(Config.MONGO_URI, tlsAllowInvalidCertificates=True)
+db = mongo_client.get_database("app")  # Automatically gets the DB from the URI
 rental_collection = db["house_rental"] 
 user_collection = db["users"] 
 
@@ -22,4 +22,6 @@ def search_rentals(query_doc):
     """
     Execute a search query using the provided MongoDB query document.
     """
-    return list(rental_collection.find(query_doc))
+    result = list(rental_collection.find(query_doc))
+    print(result)
+    return result

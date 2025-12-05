@@ -61,7 +61,7 @@ def render_post(post, collected_ids):
         <div class="card-info"><span class="label">💰 租金：</span>{rental_text}</div>
         <div class="card-info"><span class="label">🏠 格局：</span>{layout_text}</div>
         <div class="card-info"><span class="label">📐 坪數：</span>{post.get("坪數", ["未知"])[0]} 坪</div>
-        <div class="card-info"><span class="label">📞 聯絡人：</span>{contacts.get("聯絡人", "未知")} ({contacts.get("手機", ["未知"])[0]})</div>
+        <div class="card-info"><span class="label">📞 聯絡人：</span>{(contacts.get("手機") and contacts.get("手機")[0]) or "未知"}</div>
     </div>
     """
     st.markdown(card_html, unsafe_allow_html=True)
