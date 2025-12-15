@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     result = rag_service.query(
         question="東區凱旋路",
-        filters={"pet_allowed": True}  # 強制過濾
+        filters={"pet_allowed": False}  # 強制過濾
     )
     print(result)
     if not result['ids'][0]:

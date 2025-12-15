@@ -1,17 +1,6 @@
-import sys
-import os
-import json
-import threading
-from queue import Queue
-from src.llm_data_parser.llm_config import LLMConfig, LLMMode
-from src.llm_data_parser.client import LLMClient
+from src.rag_service.rag import RagService
 from src.query_generator.app import MiniRagApp
-from src.query_generator.query_config import LLM_SERVER_ADDRESS, LLM_SERVER_PORT, LLM_MODEL_TYPE
-
-try:
-    from src.query_generator.query_config import LLM_API_KEY
-except ImportError:
-    LLM_API_KEY = None
+from src.config import Config
 
 
 # === 攔截器 (Monkey Patch) ===
@@ -20,8 +9,8 @@ def install_spy(mini_rag_instance):
         client = getattr(mini_rag_instance, 'llm_client', None) or getattr(mini_rag_instance, 'client', None)
         if client:
             # 注入 API KEY 到原本的 config (如果是透過 App 初始化)
-            if LLM_API_KEY:
-                client.config.api_key = LLM_API_KEY
+            if Config.LLM_CLIENT_TOKEN:
+                client.config.api_key = Config.LLM_CLIENT_TOKEN
                 print(f"🔑 已注入 API Key 到 MiniRagApp Client")
 
             original_method = client.call_local_model
@@ -39,9 +28,9 @@ def install_spy(mini_rag_instance):
 
 def main():
     print(f"🔄 初始化系統中...")
-    print(f"📍 連線目標: {LLM_SERVER_ADDRESS}:{LLM_SERVER_PORT} (Model: {LLM_MODEL_TYPE})")
-    if LLM_API_KEY:
-        print(f"🔑 API Key: 已載入 ({LLM_API_KEY[:4]}***)")
+    print(f"📍 連線目標: {Config.LLM_SERVER_ADDRESS}:{Config.LLM_SERVER_PORT} (Model: {Config.LLM_MODEL_TYPE})")
+    if Config.LLM_CLIENT_TOKEN:
+        print(f"🔑 API Key: 已載入 ({Config.LLM_CLIENT_TOKEN[:4]}***)")
     else:
         print(f"⚠️ API Key: 未設定 (如果遇到 403 錯誤，請在 settings.py 加入 LLM_API_KEY)")
 
@@ -52,7 +41,19 @@ def main():
         print(f"❌ 初始化失敗: {e}")
         return
 
-    use_mongodb = True
+    rag_service = RagService(
+        tenant=Config.CHROMA_TENANT,
+        database=Config.CHROMA_DATABASE,
+        collection_name=Config.CHROMA_COLLECTION_NAME,
+        provider=Config.LLM_EMBEDDING_PROVIDER,
+        base_url=Config.LLM_EMBEDDING_SERVER_ADDRESS,
+        base_port=Config.LLM_EMBEDDING_SERVER_PORT,
+        model_type=Config.LLM_EMBEDDING_MODEL_TYPE,
+        embedding_token=Config.LLM_EMBEDDING_CLIENT_TOKEN,
+        chroma_token=Config.CHROMA_TOKEN,
+    )
+
+    use_chroma = True
     print("\n✨ MiniRAG 啟動成功！")
     print("------------------------------------------------------")
     print("指令說明:")
@@ -65,7 +66,7 @@ def main():
 
     while True:
         try:
-            mode_name = "租屋搜尋(MongoDB)" if use_mongodb else "一般聊天(Chat)"
+            mode_name = "租屋搜尋(MongoDB)" if use_chroma else "一般聊天(Chat)"
             prompt_text = f"\n[{mode_name}] 請輸入需求: "
             user_query = input(prompt_text).strip()
 
@@ -76,118 +77,29 @@ def main():
             if user_query.lower() == "exit":
                 break
             elif user_query.lower() == "others":
-                use_mongodb = False
+                use_chroma = False
                 print("🔀 已切換至：一般聊天模式")
                 continue
             elif user_query.lower() == "rental":
-                use_mongodb = True
+                use_chroma = True
                 print("🔀 已切換至：租屋搜尋模式")
                 continue
-            elif user_query.lower() == "debug":
-                print("🐛 進入偵錯模式...")
-                debug_q = input("   [Debug] 請輸入測試語句 (例如: 一房一廳): ").strip()
-                if not debug_q: continue
 
-                print("   [Debug] 正在請求模型生成...")
-                print("   [Raw Output Start] -> ", end="", flush=True)
+            if use_chroma:
+                response = mini_rag.format_query(user_query)
 
-                debug_queue = Queue()
-                debug_config = LLMConfig(
-                    mode=LLMMode.CHAT,
-                    token=LLM_API_KEY,
-                    server_address=LLM_SERVER_ADDRESS,
-                    server_port=LLM_SERVER_PORT,
-                    model_type=LLM_MODEL_TYPE,
-                    stream=True,
-                    queue=debug_queue
+                # result = rag_service.query(user_query, response)
+                result = rag_service.collection.query(
+                    query_texts=[user_query],
+                    where=response,
+                    include=["documents", "metadatas"]
                 )
 
-                # 手動注入 API Key
-                if LLM_API_KEY:
-                    debug_config.api_key = LLM_API_KEY
+                print(result["documents"])
+                print(result["metadatas"])
 
-                debug_client = LLMClient(debug_config)
-                test_prompt = f"請將以下需求轉換為 MongoDB 查詢 JSON: {debug_q}。只輸出 JSON，不要包含 Markdown。"
-
-                worker = threading.Thread(target=lambda: debug_client.call_local_model(test_prompt))
-                worker.start()
-
-                full_response = ""
-
-                while True:
-                    data = debug_queue.get()
-
-                    token = getattr(data, 'token', None)
-                    if not token: token = getattr(data, 'text', None)
-                    if not token: token = getattr(data, 'content', None)
-
-                    if token:
-                        print(token, end="", flush=True)
-                        full_response += str(token)
-
-                    if hasattr(data, 'completed') and data.completed:
-                        if not full_response and hasattr(data, 'complete_text') and data.complete_text:
-                            print(data.complete_text, end="", flush=True)
-                            full_response += str(data.complete_text)
-                        break
-
-                worker.join()
-                print("\n   [Raw Output End] <-")
-
-                if "403" in full_response or "權限錯誤" in full_response:
-                    print("🛑 權限錯誤！請檢查您的 API Key 設定。")
-                elif not full_response.strip().startswith("{"):
-                    print("⚠️  輸出不是以 '{' 開頭，可能包含閒聊文字。")
-                else:
-                    print("✅ 格式看起來正確。")
-                continue
-
-            if use_mongodb:
-                print("⏳ 正在分析並生成資料庫查詢語句...")
-                json_response = mini_rag.get_mongodb_search_cmd_json(user_query)
-
-                if json_response:
-                    fixed_response = mini_rag.get_fixed_mongo_query_cmd(json_response)
-                    print("\n✅ 生成結果 (可直接用於 MongoDB):")
-                    print(json.dumps(fixed_response, ensure_ascii=False, indent=2))
-                else:
-                    print("⚠️  無法解析為有效的 JSON 查詢。")
-
-            else:
-                print("💬 AI 回應: ", end="", flush=True)
-                stream_queue = Queue()
-                chat_config = LLMConfig(
-                    mode=LLMMode.CHAT,
-                    server_address=LLM_SERVER_ADDRESS,
-                    server_port=LLM_SERVER_PORT,
-                    model_type=LLM_MODEL_TYPE,
-                    stream=True,
-                    queue=stream_queue
-                )
-                if LLM_API_KEY:
-                    chat_config.api_key = LLM_API_KEY
-
-                chat_client = LLMClient(chat_config)
-                worker = threading.Thread(target=lambda: chat_client.call_local_model(user_query))
-                worker.start()
-
-                while True:
-                    data = stream_queue.get()
-                    token = getattr(data, 'token', None)
-                    if token:
-                        print(token, end="", flush=True)
-                    if data.completed:
-                        break
-                print()
-                worker.join()
-
-        except KeyboardInterrupt:
-            print("\n👋 程式中斷")
-            break
         except Exception as e:
-            print(f"\n❌ 發生未預期的錯誤: {e}")
-            import traceback
-            traceback.print_exc()
+            print(e)
 
     print("👋 再見！")
 
