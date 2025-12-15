@@ -3,7 +3,7 @@ from enum import Enum
 from dataclasses import dataclass
 from typing import Optional
 from queue import Queue
-from src.llm_data_parser.registry import ModelRegistry
+from src.rag_service.registry import ModelRegistry
 from src.config import Config
 
 

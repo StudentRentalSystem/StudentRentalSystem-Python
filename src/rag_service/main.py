@@ -37,14 +37,14 @@ if __name__ == '__main__':
 
     rag_service.insert(raw_post, metadata)
 
-    result = rag_service.query("東區凱旋路")
-    print(result)
+    # result = rag_service.query("東區凱旋路")
+    # print(result)
 
     result = rag_service.query(
         question="東區凱旋路",
         filters={"pet_allowed": True}  # 強制過濾
     )
-
+    print(result)
     if not result['ids'][0]:
         print("測試成功！成功過濾掉不可養寵物的房子。")
     else:
