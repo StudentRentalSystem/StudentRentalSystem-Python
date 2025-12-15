@@ -3,10 +3,9 @@ from enum import Enum
 from dataclasses import dataclass
 from typing import Optional
 from queue import Queue
-from dotenv import load_dotenv
 from src.llm_data_parser.registry import ModelRegistry
+from src.config import Config
 
-load_dotenv()
 
 class LLMMode(Enum):
     CHAT = "chat"
@@ -19,10 +18,10 @@ class LLMConfig:
     LLM 配置類別
     """
     mode: LLMMode = LLMMode.GENERATE
-    server_address: str = os.getenv("LLM_SERVER_ADDRESS", "http://localhost")
-    server_port: int = int(os.getenv("LLM_SERVER_PORT", 11434))
-    model_type: str = os.getenv("LLM_MODEL_TYPE", "llama3:8b")
-    token: Optional[str] = os.getenv("LLM_CLIENT_TOKEN")
+    server_address: str = Config.LLM_SERVER_ADDRESS
+    server_port: int = int(Config.LLM_SERVER_PORT)
+    model_type: str = Config.LLM_MODEL_TYPE
+    token: Optional[str] = Config.LLM_CLIENT_TOKEN
     stream: bool = False
     queue: Optional[Queue] = None
     

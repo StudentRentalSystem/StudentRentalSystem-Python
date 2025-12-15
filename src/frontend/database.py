@@ -1,6 +1,6 @@
 import pymongo
 import redis
-from config import Config
+from src.config import Config
 
 # Initialize MongoDB connection
 mongo_client = pymongo.MongoClient(Config.MONGO_URI, tlsAllowInvalidCertificates=True)

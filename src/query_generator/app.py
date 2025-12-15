@@ -2,8 +2,8 @@ import json
 import re
 from typing import Optional, Dict, Any
 from src.llm_data_parser.client import LLMClient
-from src.llm_data_parser.config import LLMConfig, LLMMode
-from src.query_generator.settings import (
+from src.llm_data_parser.llm_config import LLMConfig, LLMMode
+from src.query_generator.query_config import (
     QUERY_PROMPT_PATH,
     MONGO_QUERY_PROMPT_PATH,
     LLM_SERVER_ADDRESS,

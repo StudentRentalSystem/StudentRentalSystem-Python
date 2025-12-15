@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Optional
 from queue import Queue
-from src.llm_data_parser.config import LLMConfig, LLMMode
+from src.llm_data_parser.llm_config import LLMConfig, LLMMode
 
 
 # 定義一個簡單的資料類別，確保 main.py 能正確讀取屬性

@@ -1,6 +1,6 @@
 from src.query_generator.app import MiniRagApp
-from src.llm_data_parser.config import LLMConfig, LLMMode
-from src.frontend.config import Config
+from src.llm_data_parser.llm_config import LLMConfig, LLMMode
+from src.config import Config
 
 # Avoid multiple time initialized
 class LLMService:

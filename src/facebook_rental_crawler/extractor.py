@@ -1,7 +1,7 @@
 import requests
 import re
-from config import Config
-from src.llm_data_parser.config import LLMMode
+from src.config import CrawlerConfig as Config
+from src.llm_data_parser.llm_config import LLMMode
 from src.facebook_rental_crawler.utils import extract_json_from_string, hash_content
 from src.llm_data_parser.client import LLMClient, LLMConfig
 

@@ -3,13 +3,13 @@ import os
 import json
 import threading
 from queue import Queue
-from src.llm_data_parser.config import LLMConfig, LLMMode
+from src.llm_data_parser.llm_config import LLMConfig, LLMMode
 from src.llm_data_parser.client import LLMClient
 from src.query_generator.app import MiniRagApp
-from src.query_generator.settings import LLM_SERVER_ADDRESS, LLM_SERVER_PORT, LLM_MODEL_TYPE
+from src.query_generator.query_config import LLM_SERVER_ADDRESS, LLM_SERVER_PORT, LLM_MODEL_TYPE
 
 try:
-    from src.query_generator.settings import LLM_API_KEY
+    from src.query_generator.query_config import LLM_API_KEY
 except ImportError:
     LLM_API_KEY = None
 

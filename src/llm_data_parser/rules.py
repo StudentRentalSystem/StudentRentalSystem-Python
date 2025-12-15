@@ -1,5 +1,5 @@
 from typing import Dict, Any, Callable, List
-from config import LLMMode
+from src.llm_data_parser.llm_config import LLMMode
 
 
 def receive_chat_mode_handler(json_data: Dict[str, Any]) -> str:
