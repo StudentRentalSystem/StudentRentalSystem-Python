@@ -1,10 +1,8 @@
 import sys
 import threading
 import queue
-from src.facebook_rental_crawler.crawler import Crawler
 from src.facebook_rental_crawler.extractor import RentalExtractor
-from src.facebook_rental_crawler.database import db_instance
-
+from src.facebook_rental_crawler.crawler import Crawler
 
 def worker(post_queue):
     extractor = RentalExtractor()
@@ -16,9 +14,8 @@ def worker(post_queue):
             break
             
         try:
-            processed_doc = extractor.process_post(post["content"])
-            if processed_doc:
-                db_instance.insert_post(processed_doc)
+            processed_uuid = extractor.process_post_and_insert(post["content"])
+            print(processed_uuid)
         except Exception as e:
             print(f"Error in worker: {e}")
         finally:

@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
-from database import search_rentals, get_rental_info_by_ids
+from embedding_database import search_rentals, get_rental_info_by_ids
 from user_service import UserService
 from llm_service import LLMService
 
@@ -37,8 +37,11 @@ def search():
         email = session["user"]["email"]
 
         user_service.add_history(email, keyword)
+
         query_json = llm_service.generate_mongo_query(keyword)
+
         results = search_rentals(query_json)
+
         session['last_query'] = query_json
         session['last_keyword'] = keyword
 

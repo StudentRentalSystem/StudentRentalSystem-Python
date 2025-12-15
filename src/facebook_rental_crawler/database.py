@@ -1,24 +1,22 @@
-from pymongo import MongoClient, errors
-from src.facebook_rental_crawler.crawler_config import CrawlerConfig as Config
+from src.rag_service.rag import RagService
+from src.config import Config
+
 
 class Database:
     def __init__(self):
-        self.client = MongoClient(Config.DB_URL)
-        self.db = self.client[Config.DB_NAME]
-        self.collection = self.db[Config.DB_COLLECTION]
+        self.rag_service = RagService(
+            tenant=Config.CHROMA_TENANT,
+            database=Config.CHROMA_DATABASE,
+            collection_name=Config.CHROMA_COLLECTION_NAME,
+            provider=Config.LLM_EMBEDDING_PROVIDER,
+            base_url=Config.LLM_EMBEDDING_SERVER_ADDRESS,
+            base_port=Config.LLM_EMBEDDING_SERVER_PORT,
+            model_type=Config.LLM_EMBEDDING_MODEL_TYPE,
+            embedding_token=Config.LLM_EMBEDDING_CLIENT_TOKEN,
+            chroma_token=Config.CHROMA_TOKEN,
+        )
 
-    def fetch_all_ids(self):
-        # Fetch only _id field
-        cursor = self.collection.find({}, {"_id": 1})
-        return [str(doc["_id"]) for doc in cursor]
+    def get_database(self):
+        return self.rag_service
 
-    def insert_post(self, post_document):
-        try:
-            self.collection.insert_one(post_document)
-            print(f"Post inserted: {post_document.get('_id', 'unknown')}")
-        except errors.DuplicateKeyError:
-            print("Duplicate key found in database, skipping.")
-        except Exception as e:
-            print(f"Error inserting to DB: {e}")
-
-db_instance = Database()
+database = Database().get_database()

@@ -40,7 +40,7 @@ PROMPT_TEMPLATE = """
 
   // --- 3. 展示用欄位 (Display Only - JSON String) ---
   // 請將擷取到的複雜資訊轉為 JSON String 放入此欄位
-  // 格式範例：'[{"name": "王先生", "phone": "0912..."}]'
+  // 格式範例：'[{"name": "王先生", "phone": "0912...", "line_id": ["jfdsljfd", "abcdeifdks", ....]]}]'
   "contact_info_json": "JSON String", 
 
   // 格式範例：'["http://img1.jpg", "http://img2.jpg"]'
@@ -48,7 +48,7 @@ PROMPT_TEMPLATE = """
 }
 
 【處理邏輯補充】
-1. contact_info_json: 請包含聯絡人姓名、電話、LineID。若無資訊則回傳 "[]"。
+1. contact_info_json: 請包含聯絡人姓名、電話、line_id。若無資訊則回傳 "[]"。
 2. photos_json: 若貼文中有圖片連結請列出，否則回傳 "[]"。
 3. 數值欄位若無法辨識，請填入 0 或 -1 (依上述定義)。
 4. 租金請包含管理費（若貼文有提及含管理費）。

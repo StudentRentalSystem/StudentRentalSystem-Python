@@ -2,7 +2,6 @@ from src.query_generator.app import MiniRagApp
 from src.llm_data_parser.llm_config import LLMConfig, LLMMode
 from src.config import Config
 
-# Avoid multiple time initialized
 class LLMService:
     def __init__(self):
         print(f"Initializing")
@@ -21,11 +20,11 @@ class LLMService:
         )
         self.mini_rag = MiniRagApp(self.llm_config)
         
-    def generate_mongo_query(self, user_input) -> dict:
+    def generate_chroma_query(self, user_input) -> dict:
         """
         Convert natural language input into a MongoDB JSON query.
         """
-        print("Generating database query")
+        print("Generating Chroma database query")
         json_response = self.mini_rag.get_mongodb_search_cmd_json(user_input)
         print(json_response)
         return json_response
