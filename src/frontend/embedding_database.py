@@ -20,22 +20,32 @@ class EmbeddingDatabase:
         Fetch rental information based on a list of IDs.
         """
         # Assuming _id is stored as a string in the existing database
-        return list(
-            self.embedding_database.collection.get(
-                ids=ids,
-                include=["documents", "metadatas"]
-            )
+        query_result = self.embedding_database.collection.get(
+            ids=ids,
+            include=["documents", "metadatas"]
         )
+        results = [item for batch in query_result['metadatas'] for item in batch]
+        documents = [item for batch in query_result['documents'] for item in batch]
+
+        for i, post in enumerate(results):
+            post['document'] = documents[i]
+        return results
+
 
     def search_rentals(self, query: str):
         """
         Execute a search query using the provided MongoDB query document.
         """
         query_constraints = self.query_generator.format_query(query)
-        result = list(self.embedding_database.collection.query(
+        query_result = self.embedding_database.collection.query(
             query_texts=[query],
             include=["documents", "metadatas"],
             where=query_constraints
-        ))
-        print(result)
-        return result
+        )
+        results = [item for batch in query_result['metadatas'] for item in batch]
+        documents = [item for batch in query_result['documents'] for item in batch]
+
+        for i, post in enumerate(results):
+            post['document'] = documents[i]
+
+        return results

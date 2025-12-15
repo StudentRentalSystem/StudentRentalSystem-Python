@@ -29,7 +29,6 @@ def search():
         return redirect("/")
 
     results = []
-    query_constraints = session.get('query_constraints')
 
     if request.method == "POST":
         keyword = request.form["keyword"]
@@ -37,26 +36,13 @@ def search():
 
         user_service.add_history(email, keyword)
 
-        query_constraints = embedding_database.search_rentals(keyword)
-
-        session['query_constraints'] = query_constraints
-        session['last_keyword'] = keyword
-
-    if query_constraints:
-        result = list(embedding_database.embedding_database.collection.query(
-            query_texts=[session['last_keyword']],
-            include=["documents", "metadatas"],
-            where=query_constraints
-        ))['metadatas']
-
+        results = embedding_database.search_rentals(keyword)
     collections = user_service.get_collections(session["user"]["email"])
 
     return render_template(
         "index.html",
         results=results,
         collections=collections,
-        query=query_constraints,
-        keyword=session.get("last_keyword", "")
     )
 
 @app.route("/toggle-collection", methods=["POST"])
@@ -77,7 +63,7 @@ def toggle_collection():
 def collection():
     email = session["user"]["email"]
     ids = user_service.get_collections(email)
-    posts = embedding_database.get_rental_info_by_ids(ids)['metadatas']
+    posts = embedding_database.get_rental_info_by_ids(ids)
     return render_template("collection.html", posts=posts)
 
 @app.route("/logout")

@@ -26,12 +26,6 @@
     <button class="bg-blue-600 text-white px-6 rounded">Search</button>
   </form>
 
-  {% if query_constraints %}
-  <div class="bg-gray-200 p-4 rounded mb-6">
-    <h3 class="font-bold mb-2">Generated Chroma Query</h3>
-    <pre class="text-sm">{{ query_constraints | tojson(indent=2) }}</pre>
-  </div>
-  {% endif %}
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
   {% for post in results %}
