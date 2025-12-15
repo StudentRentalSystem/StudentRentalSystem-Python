@@ -18,23 +18,57 @@
 </nav>
 
 <div class="max-w-4xl mx-auto p-6">
+
   <form method="post" class="flex gap-2 mb-6">
-    <input name="keyword" placeholder="三房一廳 租金 30000"
+    <input name="keyword" placeholder="請輸入租屋需求，例如：三房一廳 租金 30000"
+      value="{{ keyword }}"
       class="flex-1 border rounded px-4 py-2" required />
     <button class="bg-blue-600 text-white px-6 rounded">Search</button>
   </form>
 
-  {% if query %}
-  <pre class="bg-gray-800 text-white p-3 rounded text-sm mb-6">{{ query }}</pre>
+  {% if query_constraints %}
+  <div class="bg-gray-200 p-4 rounded mb-6">
+    <h3 class="font-bold mb-2">Generated Chroma Query</h3>
+    <pre class="text-sm">{{ query_constraints | tojson(indent=2) }}</pre>
+  </div>
   {% endif %}
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
   {% for post in results %}
     <div class="bg-white rounded-xl shadow p-5">
-      <h3 class="font-bold text-lg mb-2">{{ post['地址'] }}</h3>
-      <p>Rent: {{ post['租金'].minRental }} ~ {{ post['租金'].maxRental }}</p>
-      <p>Layout: {{ post['格局'].房 }} rooms {{ post['格局'].廳 }} living {{ post['格局'].衛 }} bath</p>
-      <p>Area: {{ post['坪數'][0] }}</p>
+      <h3 class="font-bold text-lg mb-2">{{ post.get('address', '未知地址') }}</h3>
+
+    <p>Rent:
+      {% set price_min = post.get('price_min', 0) %}
+      {% set price_max = post.get('price_max', 0) %}
+      {{ price_min }}{% if price_min != price_max %} ~ {{ price_max }}{% endif %} 元
+    </p>
+
+    <p>Layout:
+      {% set rooms = post.get('layout_room', 0) %}
+      {% set halls = post.get('layout_hall', 0) %}
+      {% set baths = post.get('layout_bath', 0) %}
+      {{ rooms }} rooms {{ halls }} living {{ baths }} bath
+    </p>
+
+    <p>Area:
+      {% set area = post.get('size_min', 0) %}
+      {{ area }} 坪
+    </p>
+
+    <p>可養寵物: {{ '是' if post.get('can_pet', -1)==1 else '否或未知' }}</p>
+    <p>可開伙: {{ '是' if post.get('can_cook', -1)==1 else '否或未知' }}</p>
+    <p>有電梯: {{ '是' if post.get('has_elevator', -1)==1 else '否或未知' }}</p>
+    <p>有車位: {{ '是' if post.get('has_parking', -1)==1 else '否或未知' }}</p>
+    <p>限學生: {{ '是' if post.get('is_student', -1)==1 else '否或未知' }}</p>
+    <p>性別限制:
+      {% set gender = post.get('gender_restriction', 0) %}
+      {% if gender == 0 %}不限
+      {% elif gender == 1 %}限男
+      {% elif gender == 2 %}限女
+      {% else %}未知
+      {% endif %}
+    </p>
 
       {% set collected = post['_id'] in collections %}
       <button onclick="toggleCollection('{{ post['_id'] }}', this)"
@@ -44,6 +78,7 @@
     </div>
   {% endfor %}
   </div>
+
 </div>
 </body>
 </html>

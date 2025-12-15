@@ -1,42 +1,51 @@
-from src.rag_service.rag import RagService
 from src.config import Config
+from src.query_generator.query_generator import MiniRagApp
+from src.rag_service.llm_config import LLMConfig, LLMMode
+from src.rag_service.rag import RagService
 
-# Initialize MongoDB connection
-# mongo_client = pymongo.MongoClient(Config.MONGO_URI, tlsAllowInvalidCertificates=True)
-# db = mongo_client.get_database("app")  # Automatically gets the DB from the URI
-# rental_collection = db["house_rental"]
-# user_collection = db["users"]
-#
-# # Initialize Redis connection
-# redis_client = redis.Redis(host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=0, decode_responses=True)
-database = RagService(
-    tenant=Config.CHROMA_TENANT,
-    database=Config.CHROMA_DATABASE,
-    collection_name=Config.CHROMA_COLLECTION_NAME,
-    provider=Config.LLM_EMBEDDING_PROVIDER,
-    base_url=Config.LLM_EMBEDDING_SERVER_ADDRESS,
-    base_port=Config.LLM_EMBEDDING_SERVER_PORT,
-    model_type=Config.LLM_EMBEDDING_MODEL_TYPE,
-    embedding_token=Config.LLM_EMBEDDING_CLIENT_TOKEN,
-    chroma_token=Config.CHROMA_TOKEN,
-)
-
-def get_rental_info_by_ids(ids):
-    """
-    Fetch rental information based on a list of IDs.
-    """
-    # Assuming _id is stored as a string in the existing database
-    return list(
-        database.collection.get(
-            ids=ids,
-            include=["documents", "metadatas"]
+class EmbeddingDatabase:
+    def __init__(self):
+        self.embedding_database =   RagService(
+            tenant=Config.CHROMA_TENANT,
+            database=Config.CHROMA_DATABASE,
+            collection_name=Config.CHROMA_COLLECTION_NAME,
+            provider=Config.LLM_EMBEDDING_PROVIDER,
+            base_url=Config.LLM_EMBEDDING_SERVER_ADDRESS,
+            base_port=Config.LLM_EMBEDDING_SERVER_PORT,
+            model_type=Config.LLM_EMBEDDING_MODEL_TYPE,
+            embedding_token=Config.LLM_EMBEDDING_CLIENT_TOKEN,
+            chroma_token=Config.CHROMA_TOKEN,
         )
-    )
+        self.llm_config = LLMConfig(
+            mode=LLMMode.CHAT,
+            server_address=Config.LLM_SERVER_ADDRESS,
+            server_port=Config.LLM_SERVER_PORT,
+            model_type=Config.LLM_MODEL_TYPE,
+            stream=False
+        )
+        self.query_generator = MiniRagApp(self.llm_config)
 
-def search_rentals(query_doc):
-    """
-    Execute a search query using the provided MongoDB query document.
-    """
-    result = list(rental_collection.find(query_doc))
-    print(result)
-    return result
+    def get_rental_info_by_ids(self, ids: str):
+        """
+        Fetch rental information based on a list of IDs.
+        """
+        # Assuming _id is stored as a string in the existing database
+        return list(
+            self.embedding_database.collection.get(
+                ids=ids,
+                include=["documents", "metadatas"]
+            )
+        )
+
+    def search_rentals(self, query: str):
+        """
+        Execute a search query using the provided MongoDB query document.
+        """
+        query_constraints = self.query_generator.format_query(query)
+        result = list(self.embedding_database.collection.query(
+            query_texts=[query],
+            include=["documents", "metadatas"],
+            where=query_constraints
+        ))
+        print(result)
+        return result

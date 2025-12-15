@@ -1,5 +1,5 @@
 from src.rag_service.rag import RagService
-from src.query_generator.app import MiniRagApp
+from src.query_generator.query_generator import MiniRagApp
 from src.config import Config
 
 

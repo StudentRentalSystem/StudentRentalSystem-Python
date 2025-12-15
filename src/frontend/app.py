@@ -1,13 +1,12 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
-from embedding_database import search_rentals, get_rental_info_by_ids
+from embedding_database import EmbeddingDatabase
 from user_service import UserService
-from llm_service import LLMService
 
 app = Flask(__name__)
 app.secret_key = "super-secret-key"
 
 user_service = UserService()
-llm_service = LLMService()
+embedding_database = EmbeddingDatabase()
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -30,7 +29,7 @@ def search():
         return redirect("/")
 
     results = []
-    query_json = session.get('last_query')
+    query_constraints = session.get('query_constraints')
 
     if request.method == "POST":
         keyword = request.form["keyword"]
@@ -38,15 +37,17 @@ def search():
 
         user_service.add_history(email, keyword)
 
-        query_json = llm_service.generate_mongo_query(keyword)
+        query_constraints = embedding_database.search_rentals(keyword)
 
-        results = search_rentals(query_json)
-
-        session['last_query'] = query_json
+        session['query_constraints'] = query_constraints
         session['last_keyword'] = keyword
 
-    if query_json:
-        results = search_rentals(query_json)
+    if query_constraints:
+        result = list(embedding_database.embedding_database.collection.query(
+            query_texts=[session['last_keyword']],
+            include=["documents", "metadatas"],
+            where=query_constraints
+        ))['metadatas']
 
     collections = user_service.get_collections(session["user"]["email"])
 
@@ -54,7 +55,7 @@ def search():
         "index.html",
         results=results,
         collections=collections,
-        query=query_json,
+        query=query_constraints,
         keyword=session.get("last_keyword", "")
     )
 
@@ -76,7 +77,7 @@ def toggle_collection():
 def collection():
     email = session["user"]["email"]
     ids = user_service.get_collections(email)
-    posts = get_rental_info_by_ids(ids)
+    posts = embedding_database.get_rental_info_by_ids(ids)['metadatas']
     return render_template("collection.html", posts=posts)
 
 @app.route("/logout")

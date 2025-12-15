@@ -1,4 +1,4 @@
-from embedding_database import user_collection
+from users_database import user_collection
 from datetime import datetime
 
 class UserService:
