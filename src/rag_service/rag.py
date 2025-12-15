@@ -4,33 +4,47 @@ from chromadb import QueryResult, EmbeddingFunction
 from chromadb.api import DefaultEmbeddingFunction
 from chromadb.utils import embedding_functions
 
+from src.config import Config
 from src.facebook_rental_crawler.utils import hash_content
 from src.rag_service.client import RemoteOllamaAuthEF
 
 
+class RagConfig:
+    tenant: str = Config.CHROMA_TENANT
+    database: str = Config.CHROMA_DATABASE
+    collection_name: str = Config.CHROMA_COLLECTION_NAME
+    provider: str = Config.LLM_EMBEDDING_PROVIDER
+    base_url: str = Config.LLM_EMBEDDING_SERVER_ADDRESS
+    base_port: str = Config.LLM_EMBEDDING_SERVER_PORT
+    model_type: str = Config.LLM_EMBEDDING_MODEL_TYPE
+    embedding_token: str = Config.LLM_EMBEDDING_CLIENT_TOKEN
+    chroma_token: str = Config.CHROMA_TOKEN
+
+
 class RagService:
-    def __init__(self,
-                 tenant: str,
-                 database: str,
-                 collection_name: str = "rent_posts",
-                 provider: str = "ollama",
-                 base_url: str = "http://localhost",
-                 base_port: str = "11434",
-                 model_type: str = "nomic-embed-text",
-                 embedding_token: str = "",
-                 chroma_token: str = ""):
+    _instance = None  # 類別層級的變數
+    _initialized = False  # 防止重複執行 __init__
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(RagService, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self, rag_config: RagConfig = None):
+        if rag_config is None:
+            rag_config = RagConfig()
 
         self.client = chromadb.CloudClient(
-            api_key=chroma_token,
-            tenant=tenant,
-            database=database
+            api_key=rag_config.chroma_token,
+            tenant=rag_config.tenant,
+            database=rag_config.database
         )
 
-        self.embedding_function = self._get_embedding_function(provider, base_url, base_port, model_type, embedding_token)
+        self.embedding_function = self._get_embedding_function(rag_config.provider, rag_config.base_url, rag_config.base_port, rag_config.model_type, rag_config.embedding_token)
 
-        actual_collection_name = f"{collection_name}_{model_type}"
+        actual_collection_name = f"{rag_config.collection_name}_{rag_config.model_type}"
 
-        print(f"正在使用模型: {model_type}")
+        print(f"正在使用模型: {rag_config.model_type}")
         print(f"資料表名稱: {actual_collection_name}")
 
         self.collection = self.client.get_or_create_collection(
@@ -38,6 +52,7 @@ class RagService:
             embedding_function=self.embedding_function,
             # metadata={"hnsw:space": "cosine"}
         )
+
 
     def _get_embedding_function(self, provider: str, base_url: str, base_port: str, model_type: str, token: str) -> RemoteOllamaAuthEF | DefaultEmbeddingFunction:
         model_type = model_type.lower()

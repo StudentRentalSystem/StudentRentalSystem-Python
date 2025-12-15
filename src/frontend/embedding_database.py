@@ -5,17 +5,7 @@ from src.rag_service.rag import RagService
 
 class EmbeddingDatabase:
     def __init__(self):
-        self.embedding_database =   RagService(
-            tenant=Config.CHROMA_TENANT,
-            database=Config.CHROMA_DATABASE,
-            collection_name=Config.CHROMA_COLLECTION_NAME,
-            provider=Config.LLM_EMBEDDING_PROVIDER,
-            base_url=Config.LLM_EMBEDDING_SERVER_ADDRESS,
-            base_port=Config.LLM_EMBEDDING_SERVER_PORT,
-            model_type=Config.LLM_EMBEDDING_MODEL_TYPE,
-            embedding_token=Config.LLM_EMBEDDING_CLIENT_TOKEN,
-            chroma_token=Config.CHROMA_TOKEN,
-        )
+        self.embedding_database =   RagService()
         self.llm_config = LLMConfig(
             mode=LLMMode.CHAT,
             server_address=Config.LLM_SERVER_ADDRESS,

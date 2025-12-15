@@ -22,6 +22,23 @@ class MiniRagApp:
         self.llm_client = LLMClient(self.llm_config)
         self.query_prompt_template = QUERY_PARSER_PROMPT
 
+    def clean_chroma_filter(self, filters: dict) -> dict:
+        if not filters:
+            return {}
+
+        if "$and" in filters:
+            conditions = filters["$and"]
+            if not conditions:
+                return {}
+            if len(conditions) == 1:
+                return conditions[0]
+
+        if "$or" in filters:
+            conditions = filters["$or"]
+            if len(conditions) == 1:
+                return conditions[0]
+
+        return filters
 
     def format_query(self, query: str) -> dict:
         formatted_prompt = self.query_prompt_template.replace("{user_query}", query)
@@ -30,6 +47,7 @@ class MiniRagApp:
         try:
             response = get_string_json(response)
             json_resp = response["filters"]
+            json_resp = self.clean_chroma_filter(json_resp)
             return json_resp
         except Exception as e:
             print("LLM 解析失敗，回退到純文字搜尋: ", e)
