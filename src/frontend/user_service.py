@@ -5,7 +5,6 @@ class UserService:
     def get_or_create_user(self, email, name):
         """
         Retrieve a user by email, or create a new one if they don't exist.
-        Simple authentication logic without OAuth.
         """
         user = user_collection.find_one({"email": email})
         if not user:

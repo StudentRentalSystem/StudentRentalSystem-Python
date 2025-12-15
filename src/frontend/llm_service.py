@@ -1,24 +1,8 @@
-import sys
-import os
-
-import streamlit
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.abspath(os.path.join(current_dir, "../../"))
-src_dir = os.path.dirname(current_dir)
-llm_data_parser_dir = os.path.join(src_dir, "llm_data_parser")
-
-if project_root not in sys.path:
-    sys.path.append(project_root)
-if llm_data_parser_dir not in sys.path:
-    sys.path.append(llm_data_parser_dir)
-
 from src.query_generator.app import MiniRagApp
 from src.llm_data_parser.config import LLMConfig, LLMMode
 from src.frontend.config import Config
 
 # Avoid multiple time initialized
-@streamlit.cache_resource
 class LLMService:
     def __init__(self):
         print(f"Initializing")

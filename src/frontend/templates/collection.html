@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>My Collection</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+<nav class="bg-white shadow px-6 py-3">
+  <a href="/search" class="text-blue-600">Back</a>
+</nav>
+
+<div class="max-w-4xl mx-auto p-6">
+  <h2 class="text-xl font-bold mb-4">My Collection</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  {% for post in posts %}
+    <div class="bg-white rounded-xl shadow p-5">
+      <h3 class="font-bold">{{ post['地址'] }}</h3>
+      <p>Rent: {{ post['租金'].minRental }} ~ {{ post['租金'].maxRental }}</p>
+      <p>Layout: {{ post['格局'].房 }} rooms {{ post['格局'].廳 }} living {{ post['格局'].衛 }} bath</p>
+    </div>
+  {% endfor %}
+  </div>
+</div>
+</body>
+</html>

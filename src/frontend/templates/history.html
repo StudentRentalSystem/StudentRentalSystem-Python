@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>Search History</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+<nav class="bg-white shadow px-6 py-3">
+  <a href="/search" class="text-blue-600">Back</a>
+</nav>
+
+<div class="max-w-3xl mx-auto p-6">
+  <h2 class="text-xl font-bold mb-4">Search History</h2>
+  <table class="w-full bg-white rounded shadow overflow-hidden">
+    <thead class="bg-gray-200">
+      <tr>
+        <th class="p-2 text-left">Time</th>
+        <th class="p-2 text-left">Keyword</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for t, k in history.items() %}
+      <tr class="border-t">
+        <td class="p-2">{{ t }}</td>
+        <td class="p-2">{{ k }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+</body>
+</html>
