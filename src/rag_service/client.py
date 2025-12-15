@@ -1,12 +1,47 @@
-import requests
 import json
-import logging
 from typing import Optional
 from queue import Queue
-from src.llm_data_parser.llm_config import LLMConfig, LLMMode
+import requests
+from chromadb import Documents, Embeddings
+from chromadb.utils.embedding_functions import EmbeddingFunction
+from src.rag_service.llm_config import LLMConfig, LLMMode
 
 
-# 定義一個簡單的資料類別，確保 main.py 能正確讀取屬性
+
+class RemoteOllamaAuthEF(EmbeddingFunction):
+    def __init__(self, base_url: str, api_key: str, model_name: str = "nomic-embed-text", timeout: int = 30):
+        self.api_url = f"{base_url}/api/embeddings"
+        self.model_name = model_name
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        self.timeout = timeout
+
+    def __call__(self, input: Documents) -> Embeddings:
+        embeddings = []
+        for text in input:
+            payload = {
+                "model": self.model_name,
+                "prompt": text
+            }
+            try:
+                response = requests.post(
+                    self.api_url,
+                    json=payload,
+                    headers=self.headers,
+                    timeout=self.timeout
+                )
+                response.raise_for_status()
+                data = response.json()
+                embeddings.append(data["embedding"])
+            except Exception as e:
+                print(f"Error embedding text: {e}")
+                raise e
+
+        return embeddings
+
+
 class LLMResponseData:
     def __init__(self, token: Optional[str] = None, completed: bool = False, complete_text: str = ""):
         self.token = token

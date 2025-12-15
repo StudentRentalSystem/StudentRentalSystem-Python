@@ -1,23 +1,33 @@
-import json
 import chromadb
-import os
-import uuid
+import hashlib
+from chromadb import QueryResult, EmbeddingFunction
+from chromadb.api import DefaultEmbeddingFunction
 from chromadb.utils import embedding_functions
+
+from src.facebook_rental_crawler.utils import hash_content
+from src.rag_service.client import RemoteOllamaAuthEF
 
 
 class RagService:
     def __init__(self,
-                 db_path: str = "./rent_db",
+                 tenant: str,
+                 database: str,
                  collection_name: str = "rent_posts",
-                 model_type: str = "nomic"):  # 新增這個參數來選擇模型
+                 provider: str = "ollama",
+                 base_url: str = "http://localhost",
+                 base_port: str = "11434",
+                 model_type: str = "nomic-embed-text",
+                 embedding_token: str = "",
+                 chroma_token: str = ""):
 
-        self.client = chromadb.PersistentClient(path=db_path)
+        self.client = chromadb.CloudClient(
+            api_key=chroma_token,
+            tenant=tenant,
+            database=database
+        )
 
-        # 1. 取得對應的 Embedding Function
-        self.ef = self._get_embedding_function(model_type)
+        self.embedding_function = self._get_embedding_function(provider, base_url, base_port, model_type, embedding_token)
 
-        # 2. 建立 Collection (把 ef 傳進去，Chroma 就會自動用它來算向量)
-        # 注意：建議 Collection 名稱最好跟著模型走，避免混用
         actual_collection_name = f"{collection_name}_{model_type}"
 
         print(f"正在使用模型: {model_type}")
@@ -25,43 +35,32 @@ class RagService:
 
         self.collection = self.client.get_or_create_collection(
             name=actual_collection_name,
-            embedding_function=self.ef
+            embedding_function=self.embedding_function,
+            # metadata={"hnsw:space": "cosine"}
         )
 
-    def _get_embedding_function(self, model_type: str):
-        """
-        根據輸入的 model_type 回傳對應的 Chroma Embedding Function
-        """
+    def _get_embedding_function(self, provider: str, base_url: str, base_port: str, model_type: str, token: str) -> RemoteOllamaAuthEF | DefaultEmbeddingFunction:
         model_type = model_type.lower()
 
-        # A. 本地 Ollama (推薦：nomic-embed-text)
-        if model_type == "nomic":
-            return embedding_functions.OllamaEmbeddingFunction(
-                url="http://localhost:11434/api/embeddings",
-                model_name="nomic-embed-text"  # 確保你有 pull 這個
+        if provider == "ollama":
+            return RemoteOllamaAuthEF(
+                base_url=f"{base_url}:{base_port}",
+                api_key=token,
+                model_name=model_type,
+                timeout=120
             )
 
-        # B. OpenAI (最強大，但要錢)
-        elif model_type == "openai":
-            api_key = os.getenv("OPENAI_API_KEY")
-            if not api_key:
-                raise ValueError("使用 OpenAI 模式請先設定環境變數 OPENAI_API_KEY")
-
-            return embedding_functions.OpenAIEmbeddingFunction(
-                api_key=api_key,
-                model_name="text-embedding-3-small"
-            )
-
-        # C. Chroma 預設 (all-MiniLM-L6-v2)
-        # 優點：不用安裝 Ollama 也不用錢，適合測試，但對中文較弱
-        elif model_type == "default":
+        elif provider == "default":
             return embedding_functions.DefaultEmbeddingFunction()
 
         else:
-            raise ValueError(f"不支援的模型類型: {model_type}")
+            raise ValueError(f"不支援的 provider: {provider}")
 
-    def insert(self, raw_post: str, metadata: dict):
-        new_id = str(uuid.uuid4())
+    def hash_content(self, content):
+        return hashlib.sha256(content.encode('utf-8')).hexdigest()
+
+    def insert(self, raw_post: str, metadata: dict) -> str:
+        new_id = hash_content(raw_post)
         self.collection.upsert(
             documents=[raw_post],
             metadatas=[metadata],
@@ -69,7 +68,7 @@ class RagService:
         )
         return new_id
 
-    def query(self, question: str, filters: dict = None, n_results: int = 3):
+    def query(self, question: str, filters: dict = None, n_results: int = 3) -> QueryResult:
         return self.collection.query(
             query_texts=[question],
             n_results=n_results,

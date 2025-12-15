@@ -1,9 +1,9 @@
 import requests
 import re
 from src.facebook_rental_crawler.crawler_config import CrawlerConfig as Config
-from src.llm_data_parser.llm_config import LLMMode
+from src.rag_service.llm_config import LLMMode
 from src.facebook_rental_crawler.utils import extract_json_from_string, hash_content
-from src.llm_data_parser.client import LLMClient, LLMConfig
+from src.rag_service.client import LLMClient, LLMConfig
 
 
 # Fill in the complete content of extract_prompt.txt
