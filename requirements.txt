@@ -1,4 +1,10 @@
 selenium 
-pymongo 
-requests 
+requests
 python-dotenv
+streamlit
+pymongo
+redis
+python-dotenv
+requests
+pandas
+ollama

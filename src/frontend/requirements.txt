@@ -1,7 +1,0 @@
-streamlit
-pymongo
-redis
-python-dotenv
-requests
-pandas
-ollama

@@ -19,7 +19,7 @@ def worker(post_queue):
             if processed_doc:
                 db_instance.insert_post(processed_doc)
         except Exception as e:
-            print(f"❌ Error in worker: {e}")
+            print(f"Error in worker: {e}")
         finally:
             post_queue.task_done()
 
@@ -51,7 +51,7 @@ def main():
     for t in workers:
         t.join()
 
-    print("🎉 All done!")
+    print("Finish Crawling")
 
 if __name__ == "__main__":
     main()

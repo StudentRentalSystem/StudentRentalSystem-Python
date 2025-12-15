@@ -1,4 +1,3 @@
-# database.py
 from pymongo import MongoClient, errors
 from config import Config
 
@@ -16,10 +15,10 @@ class Database:
     def insert_post(self, post_document):
         try:
             self.collection.insert_one(post_document)
-            print(f"✅ Post inserted: {post_document.get('_id', 'unknown')}")
+            print(f"Post inserted: {post_document.get('_id', 'unknown')}")
         except errors.DuplicateKeyError:
-            print("⚠️ Duplicate key found in database, skipping.")
+            print("Duplicate key found in database, skipping.")
         except Exception as e:
-            print(f"❌ Error inserting to DB: {e}")
+            print(f"Error inserting to DB: {e}")
 
 db_instance = Database()

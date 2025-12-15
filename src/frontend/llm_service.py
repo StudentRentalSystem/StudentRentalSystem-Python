@@ -21,12 +21,12 @@ from src.frontend.config import Config
 @streamlit.cache_resource
 class LLMService:
     def __init__(self):
-        print(f"🔄 初始化系統中...")
-        print(f"📍 連線目標: {Config.LLM_SERVER_ADDRESS}:{Config.LLM_SERVER_PORT} (Model: {Config.LLM_MODEL_TYPE})")
+        print(f"Initializing")
+        print(f"Connecting to: {Config.LLM_SERVER_ADDRESS}:{Config.LLM_SERVER_PORT} (Model: {Config.LLM_MODEL_TYPE})")
         if Config.LLM_CLIENT_TOKEN:
-            print(f"🔑 API Key: 已載入 ({Config.LLM_CLIENT_TOKEN[:4]}***)")
+            print(f"API Key Loaded:  ({Config.LLM_CLIENT_TOKEN[:4]}***)")
         else:
-            print(f"⚠️ API Key: 未設定 (如果遇到 403 錯誤，請在 settings.py 加入 LLM_API_KEY)")
+            print(f"API Key: Unset (如果遇到 403 錯誤，請在 settings.py 加入 LLM_API_KEY)")
         self.llm_config = LLMConfig(
             mode=LLMMode.CHAT,
             server_address=Config.LLM_SERVER_ADDRESS,
@@ -41,7 +41,7 @@ class LLMService:
         """
         Convert natural language input into a MongoDB JSON query.
         """
-        print("⏳ 正在分析並生成資料庫查詢語句...")
+        print("Generating database query")
         json_response = self.mini_rag.get_mongodb_search_cmd_json(user_input)
         print(json_response)
         return json_response

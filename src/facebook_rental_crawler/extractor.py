@@ -1,9 +1,20 @@
-# extractor.py
 import requests
-import json
 import re
 from config import Config
+from src.llm_data_parser.config import LLMMode
 from utils import extract_json_from_string, hash_content
+# import sys
+# import os
+# current_dir = os.path.dirname(os.path.abspath(__file__))
+# project_root = os.path.abspath(os.path.join(current_dir, "../../"))
+# src_dir = os.path.dirname(current_dir)
+# llm_data_parser_dir = os.path.join(src_dir, "llm_data_parser")
+#
+# if project_root not in sys.path:
+#     sys.path.append(project_root)
+# if llm_data_parser_dir not in sys.path:
+#     sys.path.append(llm_data_parser_dir)
+from src.llm_data_parser.client import LLMClient, LLMConfig
 
 # Fill in the complete content of extract_prompt.txt
 PROMPT_TEMPLATE = """請根據以下租屋貼文，轉換為指定的 JSON 格式。所有欄位皆為字串、列表或數值，請務必完整填入。
@@ -107,36 +118,17 @@ class RentalExtractor:
 
     def call_ollama(self, text):
         prompt = PROMPT_TEMPLATE.replace("{text}", text)
-        
-        # Set Headers (including Authorization)
-        headers = {
-            "Content-Type": "application/json"
-        }
-        
-        # Check if Config has TOKEN, add if present
-        if hasattr(Config, 'LLM_CLIENT_TOKEN') and Config.LLM_CLIENT_TOKEN:
-             headers["Authorization"] = f"Bearer {Config.LLM_CLIENT_TOKEN}"
-        elif hasattr(Config, 'LLM_API_KEY') and Config.LLM_API_KEY:
-             headers["Authorization"] = f"Bearer {Config.LLM_API_KEY}"
-
-        payload = {
-            "model": self.model,
-            "messages": [{"role": "user", "content": prompt}],
-            "stream": False
-        }
-        
-        try:
-            # Correction: headers must be passed as an argument, not inside payload
-            response = requests.post(self.api_url, json=payload, headers=headers)
-            response.raise_for_status()
-            return response.json().get("message", {}).get("content", "")
-        except Exception as e:
-            print(f"❌ LLM Call Error: {e}")
-            # If 401/403, print special hint
-            if isinstance(e, requests.exceptions.HTTPError):
-                if e.response.status_code in [401, 403]:
-                    print("⚠️ 權限錯誤：請檢查 .env 檔案中的 LLM_CLIENT_TOKEN 或 CLIENT_TOKEN 是否正確。")
-            return ""
+        config = LLMConfig(
+            mode=LLMMode.CHAT,
+            server_address=Config.LLM_SERVER_ADDRESS,
+            server_port=Config.LLM_SERVER_PORT,
+            model_type=Config.LLM_MODEL_TYPE,
+            stream=False,
+            token=Config.LLM_CLIENT_TOKEN,
+        )
+        client = LLMClient(config)
+        response = client.call_local_model(prompt)
+        return response
 
     def process_post(self, raw_post):
         attempts = 0
@@ -159,10 +151,10 @@ class RentalExtractor:
                     processed_data = json_obj
                     success = True
                 except Exception as e:
-                    print(f"⚠️ Data Normalization Error: {e}")
+                    print(f"Data Normalization Error: {e}")
                     attempts += 1
             else:
-                print("⚠️ Failed to parse JSON from LLM response")
+                print("Failed to parse JSON from LLM response")
                 attempts += 1
                 
         return processed_data
