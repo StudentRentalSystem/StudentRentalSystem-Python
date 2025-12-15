@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Optional
 from queue import Queue
 from dotenv import load_dotenv
-from registry import ModelRegistry
+from src.llm_data_parser.registry import ModelRegistry
 
 load_dotenv()
 

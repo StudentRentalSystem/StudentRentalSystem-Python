@@ -1,6 +1,7 @@
 import requests
 from typing import Set
 
+
 class ModelRegistry:
     _loaded: bool = False
     _available_models: Set[str] = set()

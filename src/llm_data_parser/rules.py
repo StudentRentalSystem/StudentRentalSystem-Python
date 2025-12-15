@@ -1,6 +1,7 @@
 from typing import Dict, Any, Callable, List
 from config import LLMMode
 
+
 def receive_chat_mode_handler(json_data: Dict[str, Any]) -> str:
     """提取 Chat 模式的內容"""
     return json_data.get("message", {}).get("content", "")

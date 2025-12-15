@@ -6,8 +6,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
-from config import Config
-from utils import hash_content
+from src.facebook_rental_crawler.config import Config
+from src.facebook_rental_crawler.utils import hash_content
 from database import db_instance
 
 # Setup Logger

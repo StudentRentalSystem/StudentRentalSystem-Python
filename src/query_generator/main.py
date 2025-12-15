@@ -3,27 +3,13 @@ import os
 import json
 import threading
 from queue import Queue
+from src.llm_data_parser.config import LLMConfig, LLMMode
+from src.llm_data_parser.client import LLMClient
+from src.query_generator.app import MiniRagApp
+from src.query_generator.settings import LLM_SERVER_ADDRESS, LLM_SERVER_PORT, LLM_MODEL_TYPE
 
-# --- 重要：解決 Import 路徑問題 ---
-current_dir = os.path.dirname(os.path.abspath(__file__))
-src_dir = os.path.dirname(current_dir)
-llm_data_parser_dir = os.path.join(src_dir, "llm_data_parser")
-
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
-
-if llm_data_parser_dir not in sys.path:
-    sys.path.append(llm_data_parser_dir)
-# -------------------------------
-
-from llm_data_parser.config import LLMConfig, LLMMode
-from llm_data_parser.client import LLMClient
-from query_generator.app import MiniRagApp
-from query_generator.settings import LLM_SERVER_ADDRESS, LLM_SERVER_PORT, LLM_MODEL_TYPE
-
-# 嘗試匯入 API KEY，如果 settings.py 沒有這個變數則設為 None
 try:
-    from query_generator.settings import LLM_API_KEY
+    from src.query_generator.settings import LLM_API_KEY
 except ImportError:
     LLM_API_KEY = None
 
@@ -40,7 +26,7 @@ def install_spy(mini_rag_instance):
 
             original_method = client.call_local_model
 
-            defx spy_call_local_model(prompt, *args, **kwargs):
+            def spy_call_local_model(prompt, *args, **kwargs):
                 if "JSON" in prompt or "json" in prompt:
                     print(f"\n[🔍 SPY] 攔截到 Prompt 請求:\n{prompt[:100]}...")
                 return original_method(prompt, *args, **kwargs)

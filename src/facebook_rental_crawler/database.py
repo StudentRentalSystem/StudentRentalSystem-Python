@@ -1,5 +1,5 @@
 from pymongo import MongoClient, errors
-from config import Config
+from src.facebook_rental_crawler.config import Config
 
 class Database:
     def __init__(self):

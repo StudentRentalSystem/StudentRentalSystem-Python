@@ -2,8 +2,9 @@ import time
 from queue import Queue
 from threading import Thread
 
-from config import LLMConfig, LLMMode
-from client import LLMClient
+from src.llm_data_parser.config import LLMConfig, LLMMode
+from src.llm_data_parser.client import LLMClient
+
 
 def main():
     print("=== 測試 1: 一般生成模式 (Generate) ===")

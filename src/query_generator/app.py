@@ -1,30 +1,17 @@
 import json
 import re
 from typing import Optional, Dict, Any
-import os
-import sys
-
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-src_dir = os.path.dirname(current_dir)
-llm_data_parser_dir = os.path.join(src_dir, "llm_data_parser")
-
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
-
-
-from llm_data_parser.client import LLMClient
-from llm_data_parser.config import LLMConfig, LLMMode
-
-from .settings import (
+from src.llm_data_parser.client import LLMClient
+from src.llm_data_parser.config import LLMConfig, LLMMode
+from src.query_generator.settings import (
     QUERY_PROMPT_PATH,
     MONGO_QUERY_PROMPT_PATH,
     LLM_SERVER_ADDRESS,
     LLM_SERVER_PORT,
     LLM_MODEL_TYPE
 )
-from .utils import get_string_json
-from .fixer import MongoSearchStatementFixer
+from src.query_generator.utils import get_string_json
+from src.query_generator.fixer import MongoSearchStatementFixer
 
 
 class MiniRagApp:

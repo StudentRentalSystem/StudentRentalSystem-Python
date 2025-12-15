@@ -2,19 +2,9 @@ import requests
 import re
 from config import Config
 from src.llm_data_parser.config import LLMMode
-from utils import extract_json_from_string, hash_content
-# import sys
-# import os
-# current_dir = os.path.dirname(os.path.abspath(__file__))
-# project_root = os.path.abspath(os.path.join(current_dir, "../../"))
-# src_dir = os.path.dirname(current_dir)
-# llm_data_parser_dir = os.path.join(src_dir, "llm_data_parser")
-#
-# if project_root not in sys.path:
-#     sys.path.append(project_root)
-# if llm_data_parser_dir not in sys.path:
-#     sys.path.append(llm_data_parser_dir)
+from src.facebook_rental_crawler.utils import extract_json_from_string, hash_content
 from src.llm_data_parser.client import LLMClient, LLMConfig
+
 
 # Fill in the complete content of extract_prompt.txt
 PROMPT_TEMPLATE = """請根據以下租屋貼文，轉換為指定的 JSON 格式。所有欄位皆為字串、列表或數值，請務必完整填入。

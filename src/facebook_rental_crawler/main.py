@@ -1,9 +1,10 @@
 import sys
 import threading
 import queue
-from crawler import Crawler
-from extractor import RentalExtractor
-from database import db_instance
+from src.facebook_rental_crawler.crawler import Crawler
+from src.facebook_rental_crawler.extractor import RentalExtractor
+from src.facebook_rental_crawler.database import db_instance
+
 
 def worker(post_queue):
     extractor = RentalExtractor()
@@ -22,6 +23,7 @@ def worker(post_queue):
             print(f"Error in worker: {e}")
         finally:
             post_queue.task_done()
+
 
 def main():
     if len(sys.argv) < 2:
@@ -52,6 +54,7 @@ def main():
         t.join()
 
     print("Finish Crawling")
+
 
 if __name__ == "__main__":
     main()
