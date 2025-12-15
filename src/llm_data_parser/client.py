@@ -40,7 +40,7 @@ class LLMClient:
 
         url = f"{self.base_url}{endpoint}"
 
-        # 嘗試從 config 取得 token (如果有的話)
+        # 嘗試從 config 取得 api_key (如果有的話)
         token = getattr(self.config, 'token', None)
 
         return self._call_local_model_internal(
