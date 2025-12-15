@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Optional
 from queue import Queue
-from .config import LLMConfig, LLMMode
+from config import LLMConfig, LLMMode
 
 
 # 定義一個簡單的資料類別，確保 main.py 能正確讀取屬性
@@ -41,7 +41,7 @@ class LLMClient:
         url = f"{self.base_url}{endpoint}"
 
         # 嘗試從 config 取得 api_key (如果有的話)
-        api_key = getattr(self.config, 'api_key', None)
+        token = getattr(self.config, 'token', None)
 
         return self._call_local_model_internal(
             prompt=prompt,
@@ -50,7 +50,7 @@ class LLMClient:
             model=self.config.model_type,
             stream=self.config.stream,
             queue=self.config.queue,
-            token=api_key  # 傳遞 API Key
+            token=token  # 傳遞 API Key
         )
 
     def _call_local_model_internal(self, prompt: str, mode: LLMMode, url: str, model: str, stream: bool,
