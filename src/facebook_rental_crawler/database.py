@@ -1,6 +1,4 @@
 from src.rag_service.rag import RagService
-from src.config import Config
-
 
 class Database:
     def __init__(self):

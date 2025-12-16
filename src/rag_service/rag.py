@@ -1,11 +1,11 @@
 import chromadb
 import hashlib
-from chromadb import QueryResult, EmbeddingFunction
+from chromadb import QueryResult
 from chromadb.api import DefaultEmbeddingFunction
 from chromadb.utils import embedding_functions
 
 from src.config import Config
-from src.facebook_rental_crawler.utils import hash_content
+from src.utils import hash_content
 from src.rag_service.client import RemoteOllamaAuthEF
 
 
