@@ -15,29 +15,31 @@ class EmbeddingDatabase:
         )
         self.query_generator = MiniRagApp(self.llm_config)
 
-    def get_rental_info_by_ids(self, ids: list[str]):
+    def get_rental_info_by_ids(self, ids: list[str]) -> list:
         """
         Fetch rental information based on a list of IDs.
         """
         # Assuming _id is stored as a string in the existing database
+        if (ids is None) or (len(ids) == 0):
+            return []
         query_result = self.embedding_database.collection.get(
             ids=ids,
             include=["documents", "metadatas"]
         )
+        if (query_result is None) or (len(query_result) == 0):
+            return []
 
-        metadatas = [m for batch in query_result.get("metadatas", []) for m in batch]
-        documents = [d for batch in query_result.get("documents", []) for d in batch]
+        metadatas = query_result['metadatas']
+        documents = query_result['documents']
 
-        results = []
-        for meta, doc in zip(metadatas, documents):
-            results.append({
-                "metadata": meta,  # 可能是 str
-                "document": doc
-            })
+        results = [
+            {"metadata": m, "document": d}
+            for d, m in zip(documents, metadatas)
+        ]
 
         return results
 
-    def search_rentals(self, query: str):
+    def search_rentals(self, query: str) -> list:
         """
         Execute a search query using the provided MongoDB query document.
         """
@@ -51,13 +53,18 @@ class EmbeddingDatabase:
             ]
         }
         """
+        if (query is None) or (len(query) == 0):
+           return []
 
         query_result = self.embedding_database.collection.query(
             query_texts=[query],
             include=["documents", "metadatas"],
             where=query_constraints
         )
-        print(query_result)
+
+        if (query_result is None) or (len(query_result) == 0):
+            return []
+
         """
         The results will be:
         {
@@ -66,12 +73,12 @@ class EmbeddingDatabase:
             "documents": ['a', 'b', 'c', ...]
         }
         """
-        results = [item for batch in query_result['metadatas'] for item in batch]
+        metadatas = [item for batch in query_result['metadatas'] for item in batch]
         documents = [item for batch in query_result['documents'] for item in batch]
         ids = [i for batch in query_result["ids"] for i in batch]
 
-        for i, post in enumerate(results):
-            post['document'] = documents[i]
-            post['id'] = ids[i]
-
+        results = [
+            {'id': i, 'metadata': m, 'document': d}
+            for i, m, d in zip(ids, metadatas, documents)
+        ]
         return results

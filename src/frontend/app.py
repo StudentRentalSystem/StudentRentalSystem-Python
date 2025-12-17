@@ -27,15 +27,14 @@ def search():
     if "user" not in session:
         return redirect("/")
 
-    results = []
-
+    results = session.get('last_results', [])
     if request.method == "POST":
         keyword = request.form["keyword"]
         email = session["user"]["email"]
 
         user_service.add_history(email, keyword)
         results = embedding_database.search_rentals(keyword)
-        print(results)
+        session['last_results'] = results
 
     collections = user_service.get_collections(session["user"]["email"])
 
@@ -84,10 +83,19 @@ def logout():
 
 @app.route("/history")
 def history():
+    if "user" not in session:
+        return redirect("/")
     email = session["user"]["email"]
-    history = user_service.get_history(email)
-    return render_template("history.html", history=history)
+    hist = user_service.get_history(email)
+    return render_template("history.html", history=hist)
 
+@app.route('/clean_history', methods=['GET'])
+def clean_history():
+    if "user" not in session:
+        return redirect("/")
+    email = session["user"]["email"]
+    user_service.clean_history(email)
+    return redirect('history')
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

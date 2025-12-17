@@ -69,5 +69,13 @@ class UserService:
             return {}
         
         history = user["searchHistory"]
+        if history is None:
+            return {}
         # Sort items by key (timestamp) in descending order
         return dict(sorted(history.items(), key=lambda item: item[0], reverse=True))
+
+    def clean_history(self, email):
+        user_collection.update_one(
+            {'email': email},
+            {'$set': {'searchHistory': {}}}
+        )
