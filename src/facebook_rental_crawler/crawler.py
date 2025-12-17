@@ -5,10 +5,10 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
-from config import Config
-from utils import hash_content
-from database import db_instance
+from selenium.common.exceptions import StaleElementReferenceException
+from src.facebook_rental_crawler.crawler_config import CrawlerConfig as Config
+from src.utils import hash_content
+from src.facebook_rental_crawler.database import database
 
 # Setup Logger
 logging.basicConfig(level=logging.INFO)
@@ -38,7 +38,7 @@ class Crawler:
         
         self.post_set = set()
         # Load existing IDs from database
-        self.post_set.update(db_instance.fetch_all_ids())
+        self.post_set.update(database.collection.get()['ids'])
         
         self.queue = post_queue
 

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>Search Rentals</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/static/main.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<nav class="bg-white shadow px-6 py-3 flex justify-between">
+  <span class="font-semibold">{{ session.user.name }}</span>
+  <div class="space-x-4">
+    <a href="/collection" class="text-blue-600">Collection</a>
+    <a href="/history" class="text-blue-600">History</a>
+    <a href="/logout" class="text-red-500">Logout</a>
+  </div>
+</nav>
+
+<div class="max-w-4xl mx-auto p-6">
+
+  <form method="post" class="flex gap-2 mb-6">
+    <input name="keyword" placeholder="請輸入租屋需求，例如：三房一廳 租金 30000"
+      value="{{ keyword }}"
+      class="flex-1 border rounded px-4 py-2" required />
+    <button class="bg-blue-600 text-white px-6 rounded">Search</button>
+  </form>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {% for post in results %}
+    <div class="bg-white rounded-xl shadow p-5">
+      <h3 class="font-bold text-lg mb-2">{{ post.get('metadata').get('address', '未知地址') }}</h3>
+
+      <p>Rent:
+        {% set price_min = post.get('metadata').get('price_min', 0) %}
+        {% set price_max = post.get('metadata').get('price_max', 0) %}
+        {{ price_min }}{% if price_min != price_max %} ~ {{ price_max }}{% endif %} 元
+      </p>
+
+      <p>Layout:
+        {% set rooms = post.get('metadata').get('layout_room', 0) %}
+        {% set halls = post.get('metadata').get('layout_hall', 0) %}
+        {% set baths = post.get('metadata').get('layout_bath', 0) %}
+        {{ rooms }} rooms {{ halls }} living {{ baths }} bath
+      </p>
+
+      <p>Area: {{ post.get('metadata').get('size_min', 0) }} 坪</p>
+
+      <p>可養寵物: {{ '是' if post.get('metadata').get('can_pet', -1)==1 else '否或未知' }}</p>
+      <p>可開伙: {{ '是' if post.get('metadata').get('can_cook', -1)==1 else '否或未知' }}</p>
+      <p>有電梯: {{ '是' if post.get('metadata').get('has_elevator', -1)==1 else '否或未知' }}</p>
+      <p>有車位: {{ '是' if post.get('metadata').get('has_parking', -1)==1 else '否或未知' }}</p>
+      <p>限學生: {{ '是' if post.get('metadata').get('is_student', -1)==1 else '否或未知' }}</p>
+      <p>性別限制:
+        {% set gender = post.get('metadata').get('gender_restriction', 0) %}
+        {% if gender == 0 %}不限
+        {% elif gender == 1 %}限男
+        {% elif gender == 2 %}限女
+        {% else %}未知
+        {% endif %}
+      </p>
+
+      <details class="mt-3">
+        <summary class="cursor-pointer text-blue-600 hover:underline select-none">
+          查看原始貼文詳細資訊
+        </summary>
+        <div class="mt-2 p-3 bg-gray-50 rounded-lg text-sm text-gray-800">
+          <pre class="whitespace-pre-wrap font-sans">{{ post.get('document') }}</pre>
+        </div>
+      </details>
+
+      {% set collected = post.get('id') in collections %}
+      <button
+        onclick="toggleCollection('{{ post.get('id') }}', this)"
+        class="mt-3 px-4 py-2 rounded text-white {{ 'bg-red-600' if collected else 'bg-blue-600' }}">
+        {{ '取消收藏' if collected else '收藏' }}
+      </button>
+
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+</body>
+</html>
