@@ -64,11 +64,11 @@
       {% endif %}
     </p>
 
-      {% set collected = post['_id'] in collections %}
+      {% set collected = post['id'] in collections %}
       <button
         onclick="toggleCollection('{{ post.id }}', this)"
         class="mt-3 px-4 py-2 rounded text-white {{ 'bg-red-600' if collected else 'bg-blue-600' }}">
-        {{ 'Remove from Collection' if collected else 'Add to Collection' }}
+        {{ '取消收藏' if collected else '收藏' }}
       </button>
     </div>
   {% endfor %}

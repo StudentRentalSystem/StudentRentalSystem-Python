@@ -36,6 +36,7 @@ def search():
         user_service.add_history(email, keyword)
         results = embedding_database.search_rentals(keyword)
         print(results)
+
     collections = user_service.get_collections(session["user"]["email"])
 
     return render_template(
@@ -51,7 +52,7 @@ def toggle_collection():
         return jsonify({"error": "unauthorized"}), 401
 
     data = request.json
-    post_id = str(data["id"])
+    post_id = str(data["post_id"])
     email = session["user"]["email"]
 
     collections = user_service.get_collections(email)
