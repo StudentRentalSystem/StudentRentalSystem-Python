@@ -1,4 +1,4 @@
-from users_database import user_collection
+from src.frontend.users_database import user_collection
 from datetime import datetime
 
 class UserService:

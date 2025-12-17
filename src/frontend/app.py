@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
-from embedding_database import EmbeddingDatabase
-from user_service import UserService
+from src.frontend.embedding_database import EmbeddingDatabase
+from src.frontend.user_service import UserService
 
 app = Flask(__name__)
 app.secret_key = "super-secret-key"
@@ -22,7 +22,6 @@ def login():
         return redirect("/search")
 
     return render_template("login.html")
-
 @app.route("/search", methods=["GET", "POST"])
 def search():
     if "user" not in session:
@@ -35,8 +34,8 @@ def search():
         email = session["user"]["email"]
 
         user_service.add_history(email, keyword)
-
         results = embedding_database.search_rentals(keyword)
+        print(results)
     collections = user_service.get_collections(session["user"]["email"])
 
     return render_template(
@@ -45,10 +44,14 @@ def search():
         collections=collections,
     )
 
+
 @app.route("/toggle-collection", methods=["POST"])
 def toggle_collection():
+    if "user" not in session:
+        return jsonify({"error": "unauthorized"}), 401
+
     data = request.json
-    post_id = data["post_id"]
+    post_id = str(data["id"])
     email = session["user"]["email"]
 
     collections = user_service.get_collections(email)
@@ -59,11 +62,18 @@ def toggle_collection():
     else:
         user_service.add_collection(email, post_id)
         return jsonify({"status": "added"})
+
+
 @app.route("/collection")
 def collection():
+    if "user" not in session:
+        return redirect("/")
+
     email = session["user"]["email"]
     ids = user_service.get_collections(email)
+
     posts = embedding_database.get_rental_info_by_ids(ids)
+
     return render_template("collection.html", posts=posts)
 
 @app.route("/logout")
