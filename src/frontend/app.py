@@ -1,9 +1,14 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
+from flask_session import Session
 from src.frontend.embedding_database import EmbeddingDatabase
 from src.frontend.user_service import UserService
 
 app = Flask(__name__)
 app.secret_key = "super-secret-key"
+# Flask session setting
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = False
+Session(app)
 
 user_service = UserService()
 embedding_database = EmbeddingDatabase()
@@ -98,4 +103,4 @@ def clean_history():
     return redirect('history')
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=False, host='0.0.0.0')
