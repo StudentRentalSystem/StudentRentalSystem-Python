@@ -9,6 +9,8 @@
 3. **智能搜尋** 透過 ChromaDB 向量資料庫進行高效查詢
 4. **Web 介面** 提供用戶登入、搜尋房屋、管理收藏等功能
 5. **搜尋歷史記錄** 保存用戶的查詢歷史
+### State Machine Diagram
+![State Machine Diagram](./state_machine.png)
 
 ## 技術架構
 
