@@ -25,7 +25,7 @@ class Crawler:
         self.options = Options()
         self.options.add_argument(f"user-data-dir={Config.get_chrome_user_data()}")
         self.options.add_argument("profile-directory=Default")
-        # Keep browser open (optional, but useful for debugging)
+        # Keep browser open
         self.options.add_experimental_option("detach", True)
 
         self.driver = webdriver.Chrome(options=self.options)
@@ -33,7 +33,6 @@ class Crawler:
         logger.info("Facebook Crawler initialized.")
         self.scroll_count = scroll_count
         
-        # Corresponds to Java's FluentWait (Timeout 3s, Polling 100ms)
         self.wait = WebDriverWait(self.driver, 3, poll_frequency=0.1)
         
         self.post_set = set()
@@ -43,6 +42,11 @@ class Crawler:
         self.queue = post_queue
 
     def crawl(self):
+        """
+        The main crawl logics
+        loop: crawl->crawl_one_page->scroll_down_one_post_each_time
+        until: Reach the scroll_count.
+        """
         try:
             logger.info("Starting Facebook Crawler...")
             self.driver.get(Config.FACEBOOK_URL)
@@ -61,7 +65,9 @@ class Crawler:
 
                 current_post_set_size = len(self.post_set)
                 print(f"{current_post_set_size}, {last_post_set_size}")
-                
+                """
+                If there are duplicate posts, just count until >=2, which will force push. 
+                """
                 if current_post_set_size == last_post_set_size:
                     same_post_count += 1
                     print(f"No new posts found. samePostCount = {same_post_count}")
@@ -85,6 +91,11 @@ class Crawler:
             self.driver.quit()
 
     def crawl_one_page(self):
+        """
+        1. Find all "See more" or "查看更多" buttons.
+        2. Expand all buttons.
+        3. Scrape all post elements after the button expanded.
+        """
         # 1. Find all "See more" buttons
         see_more_buttons = self.driver.find_elements(By.XPATH, "//div[text()='查看更多']")
         
@@ -107,7 +118,9 @@ class Crawler:
         
         # 3. Scrape all post elements
         post_elements = self.driver.find_elements(By.XPATH, "//div[@data-ad-preview='message']")
-        
+        """
+        The loop will retry until the post found is not duplicated and doesn't contain see more button.
+        """
         for post in post_elements:
             success = False
             # Retry mechanism (max 3 times)
@@ -120,10 +133,10 @@ class Crawler:
                     # Ensure text is not empty and does not contain unexpanded "See more"
                     if text and "查看更多" not in text and "See more" not in text:
                         hash_val = hash_content(text)
-                        
+                        # If the hash value is duplicated, just skip the post.
                         if hash_val in self.post_set:
                             print("跳過重複貼文")
-                            continue # In Java logic, this continues the inner loop (retry loop), effectively skipping this processing
+                            continue 
                         
                         print("------------------------")
                         print(text)
@@ -142,6 +155,11 @@ class Crawler:
                     break
 
     def force_scroll_down(self, times, size):
+        """
+        Force to scroll page based on height(size) and times
+        :param times: How many time to scroll the page.
+        :param size: The height of the page to scroll.
+        """
         for _ in range(times):
             try:
                 self.driver.execute_script(f"window.scrollBy(0, {size});")
@@ -150,6 +168,10 @@ class Crawler:
                 logger.error(f"Force scroll error: {e}")
 
     def scroll_down_one_post_each_time(self, times):
+        """
+        Scroll down one post each time.
+        It will jump to the last post in "posts".
+        """
         for _ in range(times):
             try:
                 posts = self.driver.find_elements(By.XPATH, "//div[@data-ad-preview='message']")
@@ -169,7 +191,7 @@ class Crawler:
         if hash_val not in self.post_set:
             self.post_set.add(hash_val)
             print(f"Hashed content:{hash_val}")
-            # Create post object and put into Queue (Here using Dict to simulate Post object)
+            # Create post object and put into Queue
             p = {"id": hash_val, "content": content}
             try:
                 self.queue.put(p)

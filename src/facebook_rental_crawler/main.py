@@ -9,7 +9,7 @@ def worker(post_queue):
     while True:
         post = post_queue.get()
         if post is Crawler.POISON_PILL:
-            # Put back Poison Pill to let other workers stop (if multiple workers)
+            # Put back Poison Pill to let other workers stop (for multiple workers environment)
             post_queue.put(Crawler.POISON_PILL)
             break
             
@@ -23,6 +23,9 @@ def worker(post_queue):
 
 
 def main():
+    """
+    To run the crawler, the user must specify the scroll count in arguments.
+    """
     if len(sys.argv) < 2:
         print("Usage: python main.py <scroll_count>")
         sys.exit(1)

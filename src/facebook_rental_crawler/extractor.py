@@ -25,6 +25,12 @@ class RentalExtractor:
         return response
 
     def process_post_and_insert(self, raw_post: str) -> str:
+        """
+        Generate the metadata and uuid for the given post string, and
+        store all of these into DB.        
+        :param raw_post: The raw string of the post being processed.
+
+        """
         metadata: dict = json.loads(self.call_ollama(raw_post))
         uuid: str = self.database.insert(raw_post, metadata)
 
