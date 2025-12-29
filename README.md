@@ -105,7 +105,7 @@
       ```
    - Crawler
       ```bash
-     python src.facebook_rental_crawler.crawler <scroll_count>
+     python src.facebook_rental_crawler.main <scroll_count>
      ```
 ## 使用說明
 
