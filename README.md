@@ -99,10 +99,14 @@
    ```
 
 4. 啟動服務：
-   ```bash
-   python src/frontend/app.py
-   ```
-
+   - Frontend
+      ```bash
+      python src.frontend.app.py
+      ```
+   - Crawler
+      ```bash
+     python src.facebook_rental_crawler.crawler <scroll_count>
+     ```
 ## 使用說明
 
 ### 使用者流程
